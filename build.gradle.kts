@@ -12,7 +12,7 @@ android {
 
     signingConfigs {
         create("lightsdkDev") {
-            storeFile = file("../../sdk/keys/lightsdk-dev.jks")
+            storeFile = file("/Users/mattdelaus/Developer/light-sdk-fresh/sdk/keys/lightsdk-dev.jks")
             storePassword = "android"
             keyAlias = "lightsdk-dev"
             keyPassword = "android"
@@ -66,6 +66,6 @@ kotlin {
 
 dependencies {
     implementation(project(":sdk:client"))
-    implementation(project(":tools:zork:engine"))
+    implementation(project(":zork-engine"))
     testImplementation(libs.kotlin.test)
 }
