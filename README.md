@@ -62,7 +62,7 @@ zork/
 - [x] Restart button on About page — resets Z-machine, returns to main screen
 - [x] Back button on About page — returns to main screen
 - [x] Release APK built and included (`Zork-I-release.apk`, 16MB arm64)
-- [ ] Additional story files / save-game support
+- [x] Save-game support — three numbered slots, explicit "save" command, top-left Saves browser (load/delete)
 
 ## Credits & licensing
 
