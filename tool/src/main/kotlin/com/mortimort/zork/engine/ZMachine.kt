@@ -312,8 +312,8 @@ class ZMachine(
         // LONG form (2OP): bit 6 = op1 type code, bit 5 = op2 type code.
         // In this story file, bit clear = variable, bit set = small constant
         // (matching how the file was originally compiled).
-        val t1 = if ((b0 and 0x40) != 0) 2 else 0
-        val t2 = if ((b0 and 0x20) != 0) 2 else 0
+        val t1 = if ((b0 and 0x40) != 0) 2 else 1
+        val t2 = if ((b0 and 0x20) != 0) 2 else 1
         val ops = IntArray(2)
         val vars = IntArray(2)
         val types = mutableListOf<Int>()
@@ -342,15 +342,15 @@ class ZMachine(
         if (!isZeroOp) {
             val opType = (b0 shr 4) and 0x03
             when (opType) {
-                0 -> { ops[0] = story.readWord(p); p += 2; types.add(1) }   // $$00 large constant
-                1 -> { ops[0] = story.readByte(p); p += 1; types.add(0) }   // $$01 small constant
-                2 -> { vars[0] = story.readByte(p); ops[0] = vars[0]; p += 1; types.add(2) }
+                0 -> { ops[0] = story.readWord(p); p += 2; types.add(0) }   // $$00 large constant
+                1 -> { ops[0] = story.readByte(p); p += 1; types.add(2) }   // $$01 small constant
+                2 -> { vars[0] = story.readByte(p); ops[0] = vars[0]; p += 1; types.add(1) }
             }
         } else if (name == "print" || name == "print_ret") {
             // print/print_ret 0OPs: 2-byte packed string address follows the opcode
             // at bytes pc+1 (high) and pc+2 (low). b1 is the high byte (at+1);
             // the low byte is at at+2 (not at+1, which is the same as b1).
-            ops[0] = ((b1 and 0xFF) shl 8) or story.readByte(at + 2); p = at + 3; types.add(1)
+            ops[0] = ((b1 and 0xFF) shl 8) or story.readByte(at + 2); p = at + 3; types.add(2)
         }
         val store = if (ZOpcodes.needsStore(name)) story.readByte(p).also { p += 1 } else 0
         val (onTrue, off, used) = if (ZOpcodes.needsBranch(name)) readBranch(p).also { p += it.third } else Triple(null, 0, 0)
@@ -394,8 +394,8 @@ class ZMachine(
     private inline fun addOperand(type: Int, p: Int, emit: (newP: Int, value: Int, varNum: Int, type: Int) -> Unit) {
         var np = p
         when (type) {
-            0 -> { val v = story.readWord(np); np += 2; emit(np, v, v, 1) }      // $$00 large const
-            1 -> { val v = story.readByte(np); np += 1; emit(np, v, v, 0) }      // $$01 small const
+            0 -> { val v = story.readWord(np); np += 2; emit(np, v, v, 0) }      // $$00 large const
+            1 -> { val v = story.readByte(np); np += 1; emit(np, v, v, 1) }      // $$01 small const
             2 -> { val v = story.readByte(np); np += 1; emit(np, v, v, 2) }       // variable
             else -> { emit(np, 0, 0, 0) }                                        // unreachable (3 handled by caller)
         }
