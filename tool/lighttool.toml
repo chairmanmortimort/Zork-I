@@ -1,5 +1,5 @@
 [tool]
-id          = "com.mortimort.zork"
+id          = "com.thelightphone.zork"
 label       = "Zork I"
 versionCode = 3
 versionName = "1.1.1"

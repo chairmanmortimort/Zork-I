@@ -1,4 +1,4 @@
-package com.mortimort.zork.engine
+package com.thelightphone.zork.engine
 
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
@@ -312,17 +312,17 @@ class ZMachine(
         // LONG form (2OP): bit 6 = op1 type code, bit 5 = op2 type code.
         // In this story file, bit clear = variable, bit set = small constant
         // (matching how the file was originally compiled).
-        val t1 = if ((b0 and 0x40) != 0) 0 else 2
-        val t2 = if ((b0 and 0x20) != 0) 0 else 2
+        val t1 = if ((b0 and 0x40) != 0) 2 else 0
+        val t2 = if ((b0 and 0x20) != 0) 2 else 0
         val ops = IntArray(2)
         val vars = IntArray(2)
         val types = mutableListOf<Int>()
         var p = at + 1
         for ((idx, t) in listOf(t1, t2).withIndex()) {
             when (t) {
-                0 -> { ops[idx] = story.readByte(p); p += 1; types.add(0) }
-                1 -> { ops[idx] = story.readWord(p); p += 2; types.add(1) }
-                2 -> { vars[idx] = story.readByte(p); ops[idx] = vars[idx]; p += 1; types.add(2) }
+                0 -> { ops[idx] = story.readWord(p); p += 2; types.add(0) }
+                1 -> { vars[idx] = story.readByte(p); ops[idx] = vars[idx]; p += 1; types.add(1) }
+                2 -> { ops[idx] = story.readByte(p); p += 1; types.add(2) }
             }
         }
         val storeVar = if (ZOpcodes.needsStore(name)) story.readByte(p).also { p += 1 } else 0
@@ -333,7 +333,7 @@ class ZMachine(
     private fun decodeShort(b0: Int, at: Int, b1: Int): DecodedInstruction {
         // SHORT form: bit7 set. bit6 clear -> 0OP (opcode = low 5 bits);
         // bit6 set -> 1OP (operand type in bits 5-4).
-        val isZeroOp = (b0 and 0x40) == 0
+        val isZeroOp = ((b0 shr 4) and 0x03) == 3
         val name = if (isZeroOp) ZOpcodes.ZERO_OP[b0 and 0x0F] else ZOpcodes.ONE_OP[b0 and 0x0F]
         val ops = IntArray(1)
         val vars = IntArray(1)
@@ -342,8 +342,8 @@ class ZMachine(
         if (!isZeroOp) {
             val opType = (b0 shr 4) and 0x03
             when (opType) {
-                0 -> { ops[0] = story.readByte(p); p += 1; types.add(0) }
-                1 -> { ops[0] = story.readWord(p); p += 2; types.add(1) }
+                0 -> { ops[0] = story.readWord(p); p += 2; types.add(1) }   // $$00 large constant
+                1 -> { ops[0] = story.readByte(p); p += 1; types.add(0) }   // $$01 small constant
                 2 -> { vars[0] = story.readByte(p); ops[0] = vars[0]; p += 1; types.add(2) }
             }
         } else if (name == "print" || name == "print_ret") {
@@ -394,8 +394,8 @@ class ZMachine(
     private inline fun addOperand(type: Int, p: Int, emit: (newP: Int, value: Int, varNum: Int, type: Int) -> Unit) {
         var np = p
         when (type) {
-            0 -> { val v = story.readByte(np); np += 1; emit(np, v, v, 0) }       // small const
-            1 -> { val v = story.readWord(np); np += 2; emit(np, v, v, 1) }      // large const
+            0 -> { val v = story.readWord(np); np += 2; emit(np, v, v, 1) }      // $$00 large const
+            1 -> { val v = story.readByte(np); np += 1; emit(np, v, v, 0) }      // $$01 small const
             2 -> { val v = story.readByte(np); np += 1; emit(np, v, v, 2) }       // variable
             else -> { emit(np, 0, 0, 0) }                                        // unreachable (3 handled by caller)
         }
@@ -404,12 +404,12 @@ class ZMachine(
     private fun readBranch(at: Int): Triple<Boolean, Int, Int> {
         val b = story.readByte(at)
         val onTrue = (b and 0x80) != 0
-        return if (b and 0x40 == 0) {
-            // bit 6 clear -> 1-byte branch (offset 0..63)
+        return if (b and 0x40 != 0) {
+            // Spec 4.7: bit 6 SET -> 1-byte branch (offset 0..63)
             val off = b and 0x3F
             Triple(onTrue, off, 1)
         } else {
-            // bit 6 set -> 2-byte branch (offset 0..8191)
+            // Spec 4.7: bit 6 CLEAR -> 2-byte branch (signed 14-bit offset)
             val b2 = story.readByte(at + 1)
             val raw = ((b and 0x3F) shl 8) or b2
             val off = if (raw and 0x2000 != 0) raw - 0x4000 else raw
@@ -423,7 +423,7 @@ class ZMachine(
     private fun value(i: Int): Int {
         val instr = currentInstr ?: return 0
         val t = instr.operandTypes.getOrNull(i) ?: 0
-        return if (t == 2) readVariable(instr.vars[i]) else instr.ops[i]
+        return if (t == 1) readVariable(instr.vars[i]) else instr.ops[i]
     }
 
     private fun signedWord(v: Int): Int = if (v and 0x8000 != 0) v - 0x10000 else v

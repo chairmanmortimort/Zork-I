@@ -1,4 +1,4 @@
-package com.mortimort.zork
+package com.thelightphone.zork
 
 import com.thelightphone.sdk.EntryPoint
 import com.thelightphone.sdk.LightEntryPoint

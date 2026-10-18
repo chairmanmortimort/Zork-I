@@ -1,4 +1,4 @@
-package com.mortimort.zork
+package com.thelightphone.zork
 
 /** Static content shown on the About page. */
 object AboutText {

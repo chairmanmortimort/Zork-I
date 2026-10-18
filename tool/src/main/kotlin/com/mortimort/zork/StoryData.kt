@@ -1,4 +1,4 @@
-package com.mortimort.zork
+package com.thelightphone.zork
 
 /**
  * Zork I story file (zork1.z3), embedded as base64 so the tool needs no

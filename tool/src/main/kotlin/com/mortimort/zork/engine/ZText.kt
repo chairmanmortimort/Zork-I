@@ -1,4 +1,4 @@
-package com.mortimort.zork.engine
+package com.thelightphone.zork.engine
 
 /**
  * Z-machine text decoding (v1-v3, standard 3-row alphabet + abbreviations).
@@ -76,16 +76,14 @@ object ZText {
             // word) is the end-of-string flag AND doubles as z1's top bit.
             // So on the final (EOS) word, z1 uses only bits 14-11 (4 bits).
             val eos = (byte0 and 0x80) != 0
-            val z1Mask = if (eos) 0x0F else 0x1F
             for (zi in 0 until zpc) {
-                val z = (word shr (11 - zi * 5)) and (if (zi == 0) z1Mask else 0x1F)
-
+                // Z-chars packed MSB-first: z1 = bits 14-10, z2 = 9-5, z3 = 4-0
+                // (bit 15 of the word is the end-of-string flag).
+                val shift = when (zi) { 0 -> 10; 1 -> 5; else -> 0 }
+                val z = (word shr shift) and 0x1F
                 if (pendingAbbr) {
-                    // Collecting the two z-chars that encode the abbreviation number.
                     abbrZ.add(z)
                     if (abbrZ.size == 2) {
-                        // V1-V3: each block has 16 entries. Entry number =
-                        //   (z1 - 1) * 16 + (z2 - 1)   [0-based, range 0..95]
                         val n = (abbrZ[0] - 1) * 16 + (abbrZ[1] - 1)
                         val abbrByteAddr = story.abbrevAddress(n)
                         if (abbrByteAddr in story.data.indices) {
@@ -97,33 +95,23 @@ object ZText {
                     }
                     continue
                 }
-
-                when (z) {
-                    0 -> sb.append(' ')
-                    1 -> { shiftRow = 1; lockRow = 0 }
-                    2 -> { shiftRow = 2; lockRow = 0 }
-                    3 -> {
-                        pendingAbbr = true
-                        abbrZ.clear()
-                        shiftRow = 0; lockRow = 0
-                    }
-                    4 -> { lockRow = 2; shiftRow = 0 }
-                    5 -> { lockRow = 1; shiftRow = 0 }
-                    else -> {
-                        val row = when {
-                            lockRow != 0 -> lockRow
-                            shiftRow != 0 -> shiftRow
-                            else -> 0
-                        }
-                        val idx = z - 6
-                        val table = ROWS[row]
-                        sb.append(if (idx in table.indices) table[idx] else '?')
-                        shiftRow = 0
-                    }
+                if (z == 0) { sb.append(' '); continue }
+                if (z == 1) { shiftRow = 1; lockRow = 0; continue }
+                if (z == 2) { shiftRow = 2; lockRow = 0; continue }
+                if (z == 3) { pendingAbbr = true; abbrZ.clear(); shiftRow = 0; lockRow = 0; continue }
+                if (z == 4) { lockRow = 2; shiftRow = 0; continue }
+                if (z == 5) { lockRow = 1; shiftRow = 0; continue }
+                val row = when {
+                    lockRow != 0 -> lockRow
+                    shiftRow != 0 -> shiftRow
+                    else -> 0
                 }
+                val base = when (row) { 1 -> 32; 2 -> 58; else -> 6 }
+                val idx = z - base
+                val table = ROWS[row]
+                sb.append(if (idx in table.indices) table[idx] else '?')
+                shiftRow = 0
             }
-
-            // End-of-string: bit 7 of the first byte (bit 15 of the word).
             if ((byte0 and 0x80) != 0) break
         }
 

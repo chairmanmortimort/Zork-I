@@ -1,4 +1,4 @@
-package com.mortimort.zork
+package com.thelightphone.zork
 
 import androidx.compose.runtime.*
 import com.thelightphone.sdk.LightViewModel

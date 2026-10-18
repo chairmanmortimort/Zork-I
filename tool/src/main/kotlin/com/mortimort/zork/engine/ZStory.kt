@@ -1,4 +1,4 @@
-package com.mortimort.zork.engine
+package com.thelightphone.zork.engine
 
 /**
  * Loads a Z-code story file (version 3) into memory and exposes header fields
@@ -14,13 +14,14 @@ package com.mortimort.zork.engine
  * The abbreviation table address is special: it is a word offset multiplied
  * by 32 (size of one 16-entry abbreviation block) to get a byte address.
  *
- * Header field byte offsets (V1-V3):
- *  - 0x04-0x05: RAM start (byte address)
- *  - 0x06-0x07: start PC (byte address — already a byte address, not doubled)
- *  - 0x08-0x09: end of dynamic memory (byte address)
+ * Header field byte offsets (V1-V3, per the Z-Machine Standard 1.1 §11.1):
+ *  - 0x04-0x05: base of high memory (byte address)
+ *  - 0x06-0x07: initial PC (V1-V3: PACKED word address — multiply by 2)
+ *  - 0x08-0x09: dictionary (byte address)
  *  - 0x0A-0x0B: object table (byte address)
- *  - 0x0C-0x0D: global variable table (byte address in V1-V3, word addr in V4+)
- *  - 0x28-0x29: abbreviation table (word offset × 32 → byte address)
+ *  - 0x0C-0x0D: global variable table (byte address)
+ *  - 0x0E-0x0F: base of static memory (byte address) == end of dynamic memory
+ *  - 0x18-0x19: abbreviations table (byte address)
  */
 class ZStory(val data: ByteArray) {
 
@@ -47,22 +48,16 @@ class ZStory(val data: ByteArray) {
     /** Global variables table: byte address in header 0x0C-0x0D (V1-V3). */
     val globalTable: Int get() = readWord(0x0C)
 
-    /** End of dynamic memory: byte address in header 0x08-0x09 (V1-V3). */
-    val dynamicEnd: Int get() {
-        val de = readWord(0x08)
-        return if (de > 0 && de < data.size) de else readWord(0x04)
-    }
+    /** End of dynamic memory == base of static memory: byte address in header 0x0E-0x0F. */
+    val dynamicEnd: Int get() = readWord(0x0E)
 
     /**
-     * Abbreviation table base byte address. In V1-V3, header 0x28-0x29 holds a
-     * word offset; the byte address is offset × 32. If the field is 0, the
-     * table follows immediately after the header at byte 64 (headerSize).
+     * Abbreviation table base byte address. Per Z-Machine Standard 1.1 §11.1 this is
+     * the word at header 0x18-0x19 as a plain BYTE address (NOT a word offset × 32).
+     * Verified against zork1.z3: header 0x18 = 0x01F0 = 496, whose 48 entries decode
+     * to the real Infocom abbreviation table ("the ", "your ", "cyclops ", ...).
      */
-    val abbrevTable: Int get() {
-        val wordOff = readWord(0x28)
-        val byteAddr = wordOff * 32
-        return if (byteAddr == 0) headerSize else byteAddr
-    }
+    val abbrevTable: Int get() = readWord(0x18)
 
     /**
      * Resolve abbreviation number [n] (0..95 in V3) to its z-string byte address.

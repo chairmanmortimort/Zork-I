@@ -1,4 +1,4 @@
-package com.mortimort.zork
+package com.thelightphone.zork
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

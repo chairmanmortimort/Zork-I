@@ -1,13 +1,13 @@
-package com.mortimort.zork
+package com.thelightphone.zork
 
-import com.mortimort.zork.engine.ZMachine
-import com.mortimort.zork.engine.ZStoryLoader
-import com.mortimort.zork.engine.ZOutputBuffer
+import com.thelightphone.zork.engine.ZMachine
+import com.thelightphone.zork.engine.ZStoryLoader
+import com.thelightphone.zork.engine.ZOutputBuffer
 import java.io.File
 
 /**
  * Thin Kotlin wrapper around the pure-Kotlin Z-machine interpreter
- * (com.mortimort.zork.engine). Drives the story and exposes plain String I/O so the Light UI
+ * (com.thelightphone.zork.engine). Drives the story and exposes plain String I/O so the Light UI
  * never touches the engine internals.
  *
  * Saves are explicit, player-driven and stored in three numbered slots in

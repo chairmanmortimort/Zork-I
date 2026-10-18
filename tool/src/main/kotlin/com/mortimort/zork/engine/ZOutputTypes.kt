@@ -1,4 +1,4 @@
-package com.mortimort.zork.engine
+package com.thelightphone.zork.engine
 
 /**
  * Output event produced by the interpreter, consumed by the UI.
