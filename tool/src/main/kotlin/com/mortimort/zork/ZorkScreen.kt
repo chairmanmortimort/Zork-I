@@ -305,7 +305,16 @@ class ZorkAboutScreen(
                     // ── Story ───────────────────────────────────────────────────
                     sectionHeader("Story")
                     LightText(
-                        text = storyBody(),
+                        text = AboutText.STORY,
+                        variant = LightTextVariant.Copy,
+                        align = TextAlign.Left,
+                    )
+                    Spacer(Modifier.height(1f.gridUnitsAsDp()))
+
+                    // ── Attribution ─────────────────────────────────────────────
+                    sectionHeader("Attribution")
+                    LightText(
+                        text = AboutText.ATTRIBUTION,
                         variant = LightTextVariant.Copy,
                         align = TextAlign.Left,
                     )
@@ -368,11 +377,4 @@ Tap the Saves menu to browse, load, or delete individual slots.""",
         )
     }
 
-    private fun storyBody(): String {
-        // Strip the "Save system:" paragraph and trim trailing blank lines.
-        return AboutText.CONTENT
-            .lines()
-            .takeWhile { !it.startsWith("Save system:") }
-            .joinToString("\n") + "\n"
-    }
 }

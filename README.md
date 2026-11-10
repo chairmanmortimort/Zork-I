@@ -40,6 +40,15 @@ git submodule update --init --recursive
 The APK is signed with the shared Light dev keystore (from the submodule) for local sideloading.
 Light's build service re-signs with its own key.
 
+## Install
+
+Download the release APK from the [Releases](https://github.com/chairmanmortimort/Zork-I/releases)
+page and sideload it onto a Light Phone III:
+
+```
+adb install -r Zork-I-v1.2.0-release.apk
+```
+
 ## Privacy
 
 Zork I runs entirely on-device. It makes no network requests, collects no data, and has no analytics or accounts. The story file is bundled in the APK.
@@ -49,9 +58,7 @@ See PRIVACY.md for the network endpoints it contacts.
 ## Content & licensing
 
 - Zork I source code and the Z-Machine specification: MIT License (Microsoft).
-- Interpreter engine `de.onyxbits.textfiction.zengine`: Apache-2.0.
-- Original Zplet interpreter by Matthew T. Russotto: Artistic License.
-
+- Z-machine interpreter: a Kotlin port of Zplet by Matthew T. Russotto (Artistic License).
 ## License
 
 MIT, the same as upstream light-sdk. See [LICENSE](LICENSE).
