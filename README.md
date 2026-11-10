@@ -49,6 +49,13 @@ page and sideload it onto a Light Phone III:
 adb install -r Zork-I-v1.2.0-release.apk
 ```
 
+## Screenshots
+
+![Home](docs/screenshots/home.png)
+![About](docs/screenshots/about.png)
+![Attribution](docs/screenshots/attribution.png)
+![Saves](docs/screenshots/saves.png)
+
 ## Privacy
 
 Zork I runs entirely on-device. It makes no network requests, collects no data, and has no analytics or accounts. The story file is bundled in the APK.
